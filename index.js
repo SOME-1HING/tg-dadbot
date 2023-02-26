@@ -1,14 +1,20 @@
 // ----------------------Imports-----------------------------
 
-import TelegramBot from "node-telegram-bot-api";
-import * as dotenv from "dotenv";
-import express from "express";
+const TelegramBot = require("node-telegram-bot-api");
+const dotenv = require("dotenv");
+const express = require("express");
+const fs = require("node:fs");
+const fetch = require("node-fetch");
+
+const Lists = JSON.parse(fs.readFileSync("./data.json", "utf-8"));
 
 // ----------------------Init-----------------------------
 dotenv.config();
 
 const app = express();
 
+process.env.NTBA_FIX_319 = 1;
+process.env.NTBA_FIX_350 = 0;
 // ----------------------Patterns-----------------------------
 const FORMAT_MATCH = /(\*\*?\*?|``?`?|__?|~~|\|\|)+/i,
   IM_MATCH = /\b((?:i|l)(?:(?:'|`|‛|‘|’|′|‵)?m| am|am)) ([\s\S]*)/i,
@@ -18,6 +24,40 @@ const FORMAT_MATCH = /(\*\*?\*?|``?`?|__?|~~|\|\|)+/i,
   KYS_MATCH = /\b(kys|kill\byour\s?self)\b/i,
   THANKS_MATCH = /\b(?:thank you|thanks) dad\b/i;
 
+function makeid(length) {
+  let result = "";
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const charactersLength = characters.length;
+  let counter = 0;
+  while (counter < length) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    counter += 1;
+  }
+  return result;
+}
+const chats = [];
+fs.readFile("chat.json", function (err, data) {
+  if (err) throw err;
+  const elements = JSON.parse(data);
+
+  elements.forEach((element) => {
+    if (!chats.includes(element)) {
+      chats.push(element);
+    }
+  });
+});
+const users = [];
+fs.readFile("user.json", function (err, data) {
+  if (err) throw err;
+  const elements = JSON.parse(data);
+
+  elements.forEach((element) => {
+    if (!users.includes(element)) {
+      users.push(element);
+    }
+  });
+});
 // -----------------------------Routes--------------------------------------
 
 app.get("/", (req, res) => {
@@ -31,17 +71,142 @@ app.listen(port, () => console.log("Server Started"));
 
 const bot = new TelegramBot(process.env.TOKEN, { polling: true });
 
+let botId;
+bot.getMe().then((bot) => {
+  botId = bot.id;
+});
+
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
+
+  if (!users.includes(msg.from.id) && msg.chat.type !== "private") {
+    users.push(chatId);
+    await fs.writeFile("user.json", JSON.stringify(users)),
+      (err) => {
+        if (err) throw err;
+      };
+  }
 
   await bot.sendMessage(chatId, "Hi I am up.", {
     reply_to_message_id: msg.message_id,
   });
 });
 
+bot.onText(/\/embarrass/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  if (!msg.reply_to_message) {
+    return await bot.sendMessage(chatId, "Reply to a message.", {
+      reply_to_message_id: msg.message_id,
+    });
+  }
+  const userId = msg.reply_to_message.from.id;
+
+  if (userId == botId) {
+    return await bot.sendPhoto(chatId, `./Images/user/TgDadBot.png`, {
+      parse_mode: "HTML",
+      caption: `<i>How dare you trying to embarrass your father ~${
+        msg.from.username ? "@" + msg.from.username : msg.from.first_name
+      }?</i>`,
+    });
+  }
+
+  let random = Math.floor(Math.random() * Lists.embarrassingThings.length);
+
+  const imageId = userId;
+
+  const avatar = await bot.getUserProfilePhotos(userId);
+
+  if (avatar.total_count == 0) {
+    return bot.sendMessage(chatId, Lists.embarrassingThings[random], {
+      reply_to_message_id: msg.message_id,
+    });
+  }
+
+  const file_id = avatar.photos[0][0].file_id;
+  const file = await bot.getFile(file_id);
+
+  const file_path = file.file_path;
+  const photo_url = `https://api.telegram.org/file/bot${process.env.TOKEN}/${file_path}`;
+  const response = await fetch(photo_url);
+
+  const stream = fs.createWriteStream(`./Images/user/${imageId}.png`);
+  response.body.pipe(stream);
+
+  stream.on("finish", () => {
+    const file = fs.readFileSync(`./Images/user/${imageId}.png`);
+    bot.sendPhoto(chatId, file, {
+      contentType: "image/png",
+      parse_mode: "HTML",
+      caption: `<i>${Lists.embarrassingThings[random]}</i> ~${
+        msg.reply_to_message.from.username
+          ? "@" + msg.reply_to_message.from.username
+          : msg.reply_to_message.from.first_name
+      }`,
+    });
+  });
+});
+
+bot.onText(/\/(joke|dadjoke)/, async (msg) => {
+  const chatId = msg.chat.id;
+  let random = Math.floor(Math.random() * Lists.dadjokes.length);
+
+  await bot.sendMessage(chatId, Lists.dadjokes[random], {
+    reply_to_message_id: msg.message_id,
+  });
+});
+bot.onText(/\/advice/, async (msg) => {
+  const chatId = msg.chat.id;
+  let random = Math.floor(Math.random() * Lists.advice.length);
+
+  await bot.sendMessage(chatId, Lists.advice[random], {
+    reply_to_message_id: msg.message_id,
+  });
+});
+bot.onText(/\/dab/, async (msg) => {
+  const chatId = msg.chat.id;
+  let random = Math.floor(Math.random() * Lists.dadsDabbing.length);
+
+  await bot.sendPhoto(chatId, Lists.dadsDabbing[random], {
+    reply_to_message_id: msg.message_id,
+  });
+});
+bot.onText(/\/kumiko/, async (msg) => {
+  const chatId = msg.chat.id;
+  let random = Math.floor(Math.random() * Lists.kumiko.length);
+
+  await bot.sendPhoto(chatId, Lists.kumiko[random], {
+    reply_to_message_id: msg.message_id,
+  });
+});
+bot.onText(/\/mio/, async (msg) => {
+  const chatId = msg.chat.id;
+  let random = Math.floor(Math.random() * Lists.mio.length);
+
+  await bot.sendPhoto(chatId, Lists.mio[random], {
+    reply_to_message_id: msg.message_id,
+  });
+});
+
+bot.onText(/(.*)/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  if (!chats.includes(chatId) && msg.chat.type !== "private") {
+    chats.push(chatId);
+    await fs.writeFile("chat.json", JSON.stringify(chats), (err) => {
+      if (err) throw err;
+    });
+  }
+});
+
 bot.onText(/(.*)/, async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
+
+  if (!chats.includes(chatId) && msg.chat.type !== "private") {
+    chats.push(chatId);
+    await fs.writeFile("chats.json", JSON.stringify(chats));
+  }
 
   // I'm matcher
   if (!text.match(WINNING_MATCH) && text.match(IM_MATCH)) {
