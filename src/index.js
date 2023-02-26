@@ -348,5 +348,5 @@ tfbot.command("help", async (ctx) => {
 
 //prod mode (Vercel)
 export const startVercel = async (req, res) => {
-  await production(req, res, bot);
+  await production(req, res, tfbot);
 };
