@@ -1,18 +1,26 @@
 {
-  "name": "tg-DadBot",
-  "scripts": {
-    "start": "node index.js"
-  },
+  "name": "tg-dadbot",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "scripts": {
+    "dev": "DEBUG=bot* dotenv -- nodemon -e ts -x ts-node src/index.ts",
+    "devWindows": "@powershell -Command $env:DEBUG='bot*';dotenv -- -- nodemon -e ts -x ts-node src/index.ts",
+    "build": "ncc build src/index.ts -o public -m",
+    "prettier": "prettier --write 'src/**/*.ts'"
+  },
   "keywords": [],
   "author": "",
-  "license": "GPL-3.0-or-later",
+  "license": "ISC",
   "dependencies": {
+    "@types/debug": "^4.1.7",
+    "@types/node": "^18.13.0",
+    "@vercel/ncc": "^0.36.1",
+    "debug": "^4.3.4",
+    "nodemon": "^2.0.20",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "node-fetch": "^3.3.0",
-    "node-telegram-bot-api": "^0.61.0",
+    "node-telegram-bot-api": "^0.61.0"
   }
 }
