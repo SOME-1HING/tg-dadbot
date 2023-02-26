@@ -28,7 +28,7 @@ const FORMAT_MATCH = /(\*\*?\*?|``?`?|__?|~~|\|\|)+/i,
   KYS_MATCH = /\b(kys|kill\byour\s?self)\b/i,
   THANKS_MATCH = /\b(?:thank you|thanks) dad\b/i;
 
-const chats = [];
+/* const chats = [];
 fs.readFile(
   path.join(process.cwd(), "src/data", "chat.json"),
   function (err, data) {
@@ -55,7 +55,7 @@ fs.readFile(
       }
     });
   }
-);
+); */
 
 let botId;
 
@@ -67,13 +67,13 @@ tfbot.command("start", async (ctx) => {
   const msg = ctx.message;
   const chatId = msg.chat.id;
 
-  if (!users.includes(msg.from.id) && msg.chat.type !== "private") {
+  /*   if (!users.includes(msg.from.id) && msg.chat.type !== "private") {
     users.push(chatId);
     await fs.writeFile("user.json", JSON.stringify(users)),
       (err) => {
         if (err) throw err;
       };
-  }
+  } */
 
   await tfbot.telegram.sendMessage(chatId, "Hi I am up.", {
     reply_to_message_id: msg.message_id,
@@ -198,24 +198,12 @@ tfbot.command("mio", async (ctx) => {
 tfbot.on("message", async (ctx) => {
   const msg = ctx.message;
   const chatId = msg.chat.id;
-
-  if (!chats.includes(chatId) && msg.chat.type !== "private") {
-    chats.push(chatId);
-    await fs.writeFile("chat.json", JSON.stringify(chats), (err) => {
-      if (err) throw err;
-    });
-  }
-});
-
-tfbot.on("message", async (ctx) => {
-  const msg = ctx.message;
-  const chatId = msg.chat.id;
   const text = msg.text;
 
-  if (!chats.includes(chatId) && msg.chat.type !== "private") {
+  /* if (!chats.includes(chatId) && msg.chat.type !== "private") {
     chats.push(chatId);
     await fs.writeFile("chats.json", JSON.stringify(chats));
-  }
+  } */
 
   // I'm matcher
   if (!text.match(WINNING_MATCH) && text.match(IM_MATCH)) {
