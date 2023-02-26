@@ -335,3 +335,12 @@ bot.onText(/\/help/, async (msg) => {
 export const startVercel = async (req, res) => {
   await production(req, res, bot);
 };
+
+const VERCEL_URL = `${process.env.VERCEL_URL}`;
+
+if (bot.getWebhookInfo.url !== VERCEL_URL + "/api") {
+  debug(`deleting webhook ${VERCEL_URL}`);
+  await bot.deleteWebhook();
+  debug(`setting webhook: ${VERCEL_URL}/api`);
+  await bot.setWebhook(`${VERCEL_URL}/api`);
+}
