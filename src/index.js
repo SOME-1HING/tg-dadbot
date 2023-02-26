@@ -3,10 +3,16 @@ import { production } from "./core";
 import { Telegraf } from "telegraf";
 import fetch from "node-fetch";
 import * as fs from "fs";
+import path from "path";
+
+const file = path.join(process.cwd(), "files", "test.json");
+
 const bot = new TelegramBot(process.env.TOKEN);
 const tfbot = new Telegraf(process.env.TOKEN);
 
-const Lists = JSON.parse(fs.readFileSync("./data.json", "utf-8"));
+const Lists = JSON.parse(
+  fs.readFileSync(path.join(process.cwd(), "src/data", "data.json"), "utf-8")
+);
 
 // ----------------------Init-----------------------------
 dotenv.config();
@@ -36,27 +42,33 @@ function makeid(length) {
   return result;
 }
 const chats = [];
-fs.readFile("chat.json", function (err, data) {
-  if (err) throw err;
-  const elements = JSON.parse(data);
+fs.readFile(
+  path.join(process.cwd(), "src/data", "chat.json"),
+  function (err, data) {
+    if (err) throw err;
+    const elements = JSON.parse(data);
 
-  elements.forEach((element) => {
-    if (!chats.includes(element)) {
-      chats.push(element);
-    }
-  });
-});
+    elements.forEach((element) => {
+      if (!chats.includes(element)) {
+        chats.push(element);
+      }
+    });
+  }
+);
 const users = [];
-fs.readFile("user.json", function (err, data) {
-  if (err) throw err;
-  const elements = JSON.parse(data);
+fs.readFile(
+  path.join(process.cwd(), "src/data", "user.json"),
+  function (err, data) {
+    if (err) throw err;
+    const elements = JSON.parse(data);
 
-  elements.forEach((element) => {
-    if (!users.includes(element)) {
-      users.push(element);
-    }
-  });
-});
+    elements.forEach((element) => {
+      if (!users.includes(element)) {
+        users.push(element);
+      }
+    });
+  }
+);
 
 let botId;
 bot.getMe().then((bot) => {
