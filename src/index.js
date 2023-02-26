@@ -341,9 +341,9 @@ tfbot.command("help", async (ctx) => {
 
   const text =
     "Dad Bot\nThe father you always wanted\n\nMade by: @SOME1_HING\nInspired by: Discord DadBot";
-  // await tfbot.telegram.sendMessage(chatId, Lists.advice[random], {
-  //   reply_to_message_id: msg.message_id,
-  // });
+  await tfbot.telegram.sendMessage(chatId, text, {
+    reply_to_message_id: msg.message_id,
+  });
 });
 
 //prod mode (Vercel)
