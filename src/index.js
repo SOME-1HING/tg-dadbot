@@ -1,7 +1,62 @@
 import TelegramBot from "node-telegram-bot-api";
-import { development, production } from "./core";
-
+import { production } from "./core";
+import { Telegraf } from "telegraf";
+import fetch from "node-fetch";
+import * as fs from "fs";
 const bot = new TelegramBot(process.env.TOKEN);
+const tfbot = new Telegraf(process.env.TOKEN);
+
+const Lists = JSON.parse(fs.readFileSync("./data.json", "utf-8"));
+
+// ----------------------Init-----------------------------
+dotenv.config();
+
+process.env.NTBA_FIX_319 = 1;
+process.env.NTBA_FIX_350 = 0;
+
+// ----------------------Patterns-----------------------------
+const FORMAT_MATCH = /(\*\*?\*?|``?`?|__?|~~|\|\|)+/i,
+  IM_MATCH = /\b((?:i|l)(?:(?:'|`|‛|‘|’|′|‵)?m| am|am)) ([\s\S]*)/i,
+  WINNING_MATCH = /\b(?:play|played|playing)\b/i,
+  SHUT_UP_MATCH = /\b(stfu|shutup|shut\s(?:the\s)?(?:fuck\s)?up)\b/i,
+  GOODBYE_MATCH = /\b(?:good)? ?bye\b/i,
+  KYS_MATCH = /\b(kys|kill\byour\s?self)\b/i,
+  THANKS_MATCH = /\b(?:thank you|thanks) dad\b/i;
+
+function makeid(length) {
+  let result = "";
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const charactersLength = characters.length;
+  let counter = 0;
+  while (counter < length) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    counter += 1;
+  }
+  return result;
+}
+const chats = [];
+fs.readFile("chat.json", function (err, data) {
+  if (err) throw err;
+  const elements = JSON.parse(data);
+
+  elements.forEach((element) => {
+    if (!chats.includes(element)) {
+      chats.push(element);
+    }
+  });
+});
+const users = [];
+fs.readFile("user.json", function (err, data) {
+  if (err) throw err;
+  const elements = JSON.parse(data);
+
+  elements.forEach((element) => {
+    if (!users.includes(element)) {
+      users.push(element);
+    }
+  });
+});
 
 let botId;
 bot.getMe().then((bot) => {
