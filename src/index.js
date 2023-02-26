@@ -4,6 +4,7 @@ import { Telegraf } from "telegraf";
 import fetch from "node-fetch";
 import * as fs from "fs";
 import path from "path";
+import * as dotenv from "dotenv";
 
 const file = path.join(process.cwd(), "files", "test.json");
 
