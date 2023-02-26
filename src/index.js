@@ -1,4 +1,3 @@
-import TelegramBot from "node-telegram-bot-api";
 import { production } from "./core";
 import { Telegraf } from "telegraf";
 import fetch from "node-fetch";
@@ -8,7 +7,6 @@ import * as dotenv from "dotenv";
 
 const file = path.join(process.cwd(), "files", "test.json");
 
-const bot = new TelegramBot(process.env.TOKEN);
 const tfbot = new Telegraf(process.env.TOKEN);
 
 const Lists = JSON.parse(
@@ -30,18 +28,6 @@ const FORMAT_MATCH = /(\*\*?\*?|``?`?|__?|~~|\|\|)+/i,
   KYS_MATCH = /\b(kys|kill\byour\s?self)\b/i,
   THANKS_MATCH = /\b(?:thank you|thanks) dad\b/i;
 
-function makeid(length) {
-  let result = "";
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const charactersLength = characters.length;
-  let counter = 0;
-  while (counter < length) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    counter += 1;
-  }
-  return result;
-}
 const chats = [];
 fs.readFile(
   path.join(process.cwd(), "src/data", "chat.json"),
@@ -72,11 +58,13 @@ fs.readFile(
 );
 
 let botId;
-bot.getMe().then((bot) => {
+
+tfbot.telegram.getMe().then((bot) => {
   botId = bot.id;
 });
 
-bot.onText(/\/start/, async (msg) => {
+tfbot.command("start", async (ctx) => {
+  const msg = ctx.message;
   const chatId = msg.chat.id;
 
   if (!users.includes(msg.from.id) && msg.chat.type !== "private") {
@@ -87,44 +75,53 @@ bot.onText(/\/start/, async (msg) => {
       };
   }
 
-  await bot.sendMessage(chatId, "Hi I am up.", {
+  await tfbot.telegram.sendMessage(chatId, "Hi I am up.", {
     reply_to_message_id: msg.message_id,
   });
 });
 
-bot.onText(/\/embarrass/, async (msg) => {
+tfbot.command("embarrass", async (ctx) => {
+  const msg = ctx.message;
   const chatId = msg.chat.id;
 
   if (!msg.reply_to_message) {
-    return await bot.sendMessage(chatId, "Reply to a message.", {
+    return await tfbot.telegram.sendMessage(chatId, "Reply to a message.", {
       reply_to_message_id: msg.message_id,
     });
   }
   const userId = msg.reply_to_message.from.id;
 
   if (userId == botId) {
-    return await bot.sendPhoto(chatId, `./Images/user/TgDadBot.png`, {
-      parse_mode: "HTML",
-      caption: `<i>How dare you trying to embarrass your father ~${
-        msg.from.username ? "@" + msg.from.username : msg.from.first_name
-      }?</i>`,
-    });
+    return await tfbot.telegram.sendPhoto(
+      chatId,
+      `./Images/user/TgDadBot.png`,
+      {
+        parse_mode: "HTML",
+        caption: `<i>How dare you trying to embarrass your father ~${
+          msg.from.username ? "@" + msg.from.username : msg.from.first_name
+        }?</i>`,
+      }
+    );
   }
 
   let random = Math.floor(Math.random() * Lists.embarrassingThings.length);
 
   const imageId = userId;
 
-  const avatar = await bot.getUserProfilePhotos(userId);
+  const avatar = await tfbot.telegram.getUserProfilePhotos(userId);
 
   if (avatar.total_count == 0) {
-    return bot.sendMessage(chatId, Lists.embarrassingThings[random], {
-      reply_to_message_id: msg.message_id,
-    });
+    return tfbot.telegram.sendMessage(
+      chatId,
+      Lists.embarrassingThings[random],
+      {
+        reply_to_message_id: msg.message_id,
+      }
+    );
   }
 
   const file_id = avatar.photos[0][0].file_id;
-  const file = await bot.getFile(file_id);
+  const file = await tfbot.telegram.getFile(file_id);
 
   const file_path = file.file_path;
   const photo_url = `https://api.telegram.org/file/bot${process.env.TOKEN}/${file_path}`;
@@ -135,7 +132,7 @@ bot.onText(/\/embarrass/, async (msg) => {
 
   stream.on("finish", () => {
     const file = fs.readFileSync(`./Images/user/${imageId}.png`);
-    bot.sendPhoto(chatId, file, {
+    tfbot.telegram.sendPhoto(chatId, file, {
       contentType: "image/png",
       parse_mode: "HTML",
       caption: `<i>${Lists.embarrassingThings[random]}</i> ~${
@@ -150,48 +147,56 @@ bot.onText(/\/embarrass/, async (msg) => {
   });
 });
 
-bot.onText(/\/(joke|dadjoke)/, async (msg) => {
+tfbot.command(["joke", "dadjoke"], async (ctx) => {
+  const msg = ctx.message;
   const chatId = msg.chat.id;
   let random = Math.floor(Math.random() * Lists.dadjokes.length);
 
-  await bot.sendMessage(chatId, Lists.dadjokes[random], {
+  await tfbot.telegram.sendMessage(chatId, Lists.dadjokes[random], {
     reply_to_message_id: msg.message_id,
   });
 });
-bot.onText(/\/advice/, async (msg) => {
+tfbot.command("advice", async (ctx) => {
+  const msg = ctx.message;
   const chatId = msg.chat.id;
   let random = Math.floor(Math.random() * Lists.advice.length);
 
-  await bot.sendMessage(chatId, Lists.advice[random], {
+  await tfbot.telegram.sendMessage(chatId, Lists.advice[random], {
     reply_to_message_id: msg.message_id,
   });
 });
-bot.onText(/\/dab/, async (msg) => {
+
+tfbot.command("dab", async (ctx) => {
+  const msg = ctx.message;
   const chatId = msg.chat.id;
   let random = Math.floor(Math.random() * Lists.dadsDabbing.length);
 
-  await bot.sendPhoto(chatId, Lists.dadsDabbing[random], {
+  await tfbot.telegram.sendPhoto(chatId, Lists.dadsDabbing[random], {
     reply_to_message_id: msg.message_id,
   });
 });
-bot.onText(/\/kumiko/, async (msg) => {
+
+tfbot.command("kumiko", async (ctx) => {
+  const msg = ctx.message;
   const chatId = msg.chat.id;
   let random = Math.floor(Math.random() * Lists.kumiko.length);
 
-  await bot.sendPhoto(chatId, Lists.kumiko[random], {
+  await tfbot.telegram.sendPhoto(chatId, Lists.kumiko[random], {
     reply_to_message_id: msg.message_id,
   });
 });
-bot.onText(/\/mio/, async (msg) => {
+tfbot.command("mio", async (ctx) => {
+  const msg = ctx.message;
   const chatId = msg.chat.id;
   let random = Math.floor(Math.random() * Lists.mio.length);
 
-  await bot.sendPhoto(chatId, Lists.mio[random], {
+  await tfbot.telegram.sendPhoto(chatId, Lists.mio[random], {
     reply_to_message_id: msg.message_id,
   });
 });
 
-bot.onText(/(.*)/, async (msg) => {
+tfbot.on("message", async (ctx) => {
+  const msg = ctx.message;
   const chatId = msg.chat.id;
 
   if (!chats.includes(chatId) && msg.chat.type !== "private") {
@@ -202,7 +207,8 @@ bot.onText(/(.*)/, async (msg) => {
   }
 });
 
-bot.onText(/(.*)/, async (msg) => {
+tfbot.on("message", async (ctx) => {
+  const msg = ctx.message;
   const chatId = msg.chat.id;
   const text = msg.text;
 
@@ -221,41 +227,49 @@ bot.onText(/(.*)/, async (msg) => {
           : `${formattingMatchData[0]}${imMatchData[2]}`;
 
     if (hiContent.toLowerCase() == "dad") {
-      return await bot.sendMessage(chatId, `No I'm Dad here.`, {
+      return await tfbot.telegram.sendMessage(chatId, `No I'm Dad here.`, {
         reply_to_message_id: msg.message_id,
       });
     }
-    return await bot.sendMessage(chatId, `Hi ${hiContent}, I'm Dad.`, {
-      reply_to_message_id: msg.message_id,
-    });
+    return await tfbot.telegram.sendMessage(
+      chatId,
+      `Hi ${hiContent}, I'm Dad.`,
+      {
+        reply_to_message_id: msg.message_id,
+      }
+    );
   }
 
   // Kys matcher
   if (text.match(KYS_MATCH)) {
-    await bot.sendMessage(chatId, `You better mean Kissing Your Self!`, {
-      reply_to_message_id: msg.message_id,
-    });
+    await tfbot.telegram.sendMessage(
+      chatId,
+      `You better mean Kissing Your Self!`,
+      {
+        reply_to_message_id: msg.message_id,
+      }
+    );
   }
 
   // Playing matcher
   if (text.match(WINNING_MATCH)) {
     switch (text.match(WINNING_MATCH)[0]) {
       case "play":
-        await bot
+        await tfbot.telegram
           .sendMessage(chatId, "I hope ya win son!", {
             reply_to_message_id: msg.message_id,
           })
           .catch(() => {});
         break;
       case "playing":
-        await bot
+        await tfbot.telegram
           .sendMessage(chatId, "Are ya winning son?", {
             reply_to_message_id: msg.message_id,
           })
           .catch(() => {});
         break;
       case "played":
-        await bot
+        await tfbot.telegram
           .sendMessage(chatId, "Did ya win son?", {
             reply_to_message_id: msg.message_id,
           })
@@ -266,7 +280,7 @@ bot.onText(/(.*)/, async (msg) => {
 
   // Shut up matcher
   if (text.match(SHUT_UP_MATCH)) {
-    await bot
+    await tfbot.telegram
       .sendMessage(
         chatId,
         `Listen here @${
@@ -289,7 +303,7 @@ bot.onText(/(.*)/, async (msg) => {
       "Be home before 8!",
       "Later champ!",
     ];
-    await bot
+    await tfbot.telegram
       .sendMessage(
         chatId,
         possibleGoodbyes[Math.floor(Math.random() * possibleGoodbyes.length)],
@@ -308,7 +322,7 @@ bot.onText(/(.*)/, async (msg) => {
       "Next time just ask.",
       "Oh, uh, you're welcome I guess?",
     ];
-    await bot
+    await tfbot.telegram
       .sendMessage(
         chatId,
         possibleResponses[Math.floor(Math.random() * possibleResponses.length)],
@@ -321,12 +335,13 @@ bot.onText(/(.*)/, async (msg) => {
   }
 });
 
-bot.onText(/\/help/, async (msg) => {
+tfbot.command("help", async (ctx) => {
+  const msg = ctx.message;
   const chatId = msg.chat.id;
 
   const text =
     "Dad Bot\nThe father you always wanted\n\nMade by: @SOME1_HING\nInspired by: Discord DadBot";
-  // await bot.sendMessage(chatId, Lists.advice[random], {
+  // await tfbot.telegram.sendMessage(chatId, Lists.advice[random], {
   //   reply_to_message_id: msg.message_id,
   // });
 });
