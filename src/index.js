@@ -338,3 +338,9 @@ tfbot.command("help", async (ctx) => {
 export const startVercel = async (req, res) => {
   await production(req, res, tfbot);
 };
+
+tfbot.launch();
+
+// Enable graceful stop
+process.once("SIGINT", () => bot.stop("SIGINT"));
+process.once("SIGTERM", () => bot.stop("SIGTERM"));
