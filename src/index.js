@@ -94,7 +94,7 @@ tfbot.command("embarrass", async (ctx) => {
   if (userId == botId) {
     return await tfbot.telegram.sendPhoto(
       chatId,
-      `./Images/user/TgDadBot.png`,
+      path.join(process.cwd(), "src/Images/user", "TgDadBot.png"),
       {
         parse_mode: "HTML",
         caption: `<i>How dare you trying to embarrass your father ~${
@@ -127,11 +127,11 @@ tfbot.command("embarrass", async (ctx) => {
   const photo_url = `https://api.telegram.org/file/bot${process.env.TOKEN}/${file_path}`;
   const response = await fetch(photo_url);
 
-  const stream = fs.createWriteStream(`./Images/user/${imageId}.png`);
+  const stream = fs.createWriteStream(`/tmp/${imageId}.png`);
   response.body.pipe(stream);
 
   stream.on("finish", () => {
-    const file = fs.readFileSync(`./Images/user/${imageId}.png`);
+    const file = fs.readFileSync(`/tmp/${imageId}.png`);
     tfbot.telegram.sendPhoto(chatId, file, {
       contentType: "image/png",
       parse_mode: "HTML",
@@ -141,7 +141,7 @@ tfbot.command("embarrass", async (ctx) => {
           : msg.reply_to_message.from.first_name
       }`,
     });
-    fs.unlink(`./Images/user/${imageId}.png`, (err) => {
+    fs.unlink(`/tmp/${imageId}.png`, (err) => {
       if (err) console.log(err);
     });
   });
